@@ -1,0 +1,113 @@
+--// GUI Auto Fishing, Freeze, Auto Sell
+-- Pastikan dijalankan di CLIENT (executor / LocalScript)
+
+task.wait(0.5) -- beri waktu game load dulu
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Remote
+local RFChargeFishingRod = ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RF/ChargeFishingRod"]
+local RFRequestFishingMinigameStarted = ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RF/RequestFishingMinigameStarted"]
+local REFishingCompleted = ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RE/FishingCompleted"]
+local RFSellAllItems = ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RF/SellAllItems"]
+
+-- Buat GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FishingControlGui"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+
+-- Frame utama
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0.35, 0, 0.35, 0)
+Frame.Position = UDim2.new(0.32, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Frame.BackgroundTransparency = 0.2
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner", Frame)
+UICorner.CornerRadius = UDim.new(0, 10)
+
+local UIListLayout = Instance.new("UIListLayout", Frame)
+UIListLayout.Padding = UDim.new(0, 6)
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+
+-- Fungsi pembuat tombol
+local function makeButton(text, color)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0.8, 0, 0.18, 0)
+	btn.BackgroundColor3 = color
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.TextSize = 20
+	btn.Font = Enum.Font.SourceSansBold
+	btn.Text = text
+	btn.Parent = Frame
+	local corner = Instance.new("UICorner", btn)
+	corner.CornerRadius = UDim.new(0, 8)
+	return btn
+end
+
+-- Tombol
+local AutoFishingButton = makeButton("🎣 Auto Fishing (OFF)", Color3.fromRGB(0, 170, 255))
+local FreezeButton = makeButton("🧊 Freeze Area (OFF)", Color3.fromRGB(130, 130, 255))
+local AutoSellButton = makeButton("💰 Auto Sell (OFF)", Color3.fromRGB(0, 200, 120))
+
+-- Auto Fishing
+local autoFishingRunning = false
+local function autoFishing()
+	while autoFishingRunning do
+		RFChargeFishingRod:InvokeServer(workspace:GetServerTimeNow())
+		RFRequestFishingMinigameStarted:InvokeServer:(-1.233184814453125, 0.5)
+		REFishingCompleted:FireServer()
+	end
+end. 
+
+AutoFishingButton.MouseButton1Click:Connect(function()
+	autoFishingRunning = not autoFishingRunning
+	if autoFishingRunning then
+		AutoFishingButton.Text = "🎣 Auto Fishing (ON)"
+		spawn(autoFishing)
+	else
+		AutoFishingButton.Text = "🎣 Auto Fishing (OFF)"
+	end
+end)
+
+-- Freeze Area
+local freezeActive = false
+FreezeButton.MouseButton1Click:Connect(function()
+	local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+	local root = char:WaitForChild("HumanoidRootPart")
+	freezeActive = not freezeActive
+	if freezeActive then
+		root.Anchored = true
+		FreezeButton.Text = "🧊 Freeze Area (ON)"
+	else
+		root.Anchored = false
+		FreezeButton.Text = "🧊 Freeze Area (OFF)"
+	end
+end)
+
+-- Auto Sell
+local autoSellRunning = false
+local function autoSellLoop()
+	while autoSellRunning do
+		RFSellAllItems:InvokeServer()
+		task.wait(480)
+	end
+end
+
+AutoSellButton.MouseButton1Click:Connect(function()
+	autoSellRunning = not autoSellRunning
+	if autoSellRunning then
+		AutoSellButton.Text = "💰 Auto Sell (ON)"
+		spawn(autoSellLoop)
+	else
+		AutoSellButton.Text = "💰 Auto Sell (OFF)"
+	end
+end)

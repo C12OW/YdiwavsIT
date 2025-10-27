@@ -1,0 +1,8 @@
+-- Generated with Sigma Spy Github: https://github.com/depthso/Sigma-Spy
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Remote
+local RFSellAllItems = ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RF/SellAllItems"] -- RemoteFunction 
+
+RFSellAllItems:InvokeServer()
