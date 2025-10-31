@@ -1,6 +1,3 @@
---// Fishing Toolkit V6 - Super Fast Mode
---// Fitur: Auto lempar cepat, hanya delay di RFRequestFishingMinigameStarted
-
 -- Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -9,6 +6,7 @@ local RFChargeFishingRod = ReplicatedStorage.Packages._Index["sleitnick_net@0.2.
 local RFRequestFishingMinigameStarted = ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RF/RequestFishingMinigameStarted"]
 local REFishingCompleted = ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RE/FishingCompleted"]
 local REUpdateChargeState = ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RE/UpdateChargeState"]
+local REEquipToolFromHotbar = ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RE/EquipToolFromHotbar"]
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
@@ -16,24 +14,66 @@ ScreenGui.Name = "FishingToolkitGUI"
 ScreenGui.Parent = game:GetService("CoreGui")
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0.3, 0, 0.1, 0)
+Frame.Size = UDim2.new(0.3, 0, 0.2, 0)
 Frame.Position = UDim2.new(0.35, 0, 0.4, 0)
 Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 Frame.BackgroundTransparency = 0.3
 Frame.Parent = ScreenGui
 
 local AutoFishingButton = Instance.new("TextButton")
-AutoFishingButton.Text = "🎣 Auto Fishing: OFF"
+AutoFishingButton.Text = " Auto Fishing: OFF"
 AutoFishingButton.Font = Enum.Font.SourceSansBold
 AutoFishingButton.TextColor3 = Color3.new(1, 1, 1)
-AutoFishingButton.Size = UDim2.new(1, 0, 1, 0)
+AutoFishingButton.Size = UDim2.new(1, 0, 0.5, 0)
 AutoFishingButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
 AutoFishingButton.Parent = Frame
 
+local DelayInput = Instance.new("TextBox")
+DelayInput.PlaceholderText = "Delay (dalam detik)"
+DelayInput.Size = UDim2.new(1, 0, 0.5, 0)
+DelayInput.Position = UDim2.new(0, 0, 0.5, 0)
+DelayInput.Parent = Frame
+
 -- Status
 local autoFishingRunning = false
+local delayValue = 0.3
+
+-- Fungsi untuk melakukan equip rod
+local function equipRod()
+    REEquipToolFromHotbar:FireServer(1)
+end
 
 -- Loop utama tanpa jeda, kecuali saat minigame dimulai
+local function autoFishing()
+    equipRod()
+    while autoFishingRunning do
+        -- Kirim sinyal animasi charge
+        firesignal(REUpdateChargeState.OnClientEvent)
+        
+        -- Charge pancing
+        RFChargeFishingRod:InvokeServer(workspace:GetServerTimeNow())
+        
+        -- Mulai mini game fishing
+        RFRequestFishingMinigameStarted:InvokeServer(-1.233184814453125, 0.9372613051851444, os.clock())
+        
+        task.wait(delayValue)
+        
+        -- Selesaikan fishing langsung
+        REFishingCompleted:FireServer()
+    end
+end
+
+-- Tombol GUI
+AutoFishingButton.MouseButton1Click:Connect(function()
+    autoFishingRunning = not autoFishingRunning
+    if autoFishingRunning then
+        AutoFishingButton.Text = " Auto Fishing: ON"
+        delayValue = tonumber(DelayInput.Text) or 0.3
+        spawn(autoFishing)
+    else
+        AutoFishingButton.Text = " Auto Fishing: OFF"
+    end
+end)
 local function autoFishing()
     while autoFishingRunning do
         -- 🔹 Kirim sinyal animasi charge
