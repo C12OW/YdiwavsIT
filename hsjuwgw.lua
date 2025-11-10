@@ -187,7 +187,7 @@ fishBtn.MouseButton1Click:Connect(function()
         while autoFish do
             RFChargeFishingRod:InvokeServer(workspace:GetServerTimeNow())
             RFRequestFishingMinigameStarted:InvokeServer(0.5,0.9)
-            task.wait(3)
+            task.wait(1.5)
 					REFishingCompleted:FireServer()
             task.wait(0.1)
         end
